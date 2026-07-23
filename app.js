@@ -1,7 +1,11 @@
 /* app.js — DOM + 진행 흐름. 수읽기는 worker.js가 담당. */
 (function () {
   "use strict";
-  const PROBLEMS = BadukProblems.PROBLEMS;
+  const CURATED = BadukProblems.PROBLEMS;
+  const GEN = (window.BadukGenProblems && BadukGenProblems.GEN_PROBLEMS) || [];
+  const ALL = CURATED.concat(GEN);
+  const byId = {}; ALL.forEach((p, i) => { byId[p.id] = i; });
+  const PROBLEMS = ALL; // 순번 = 병합 배열 순서
   const $ = (id) => document.getElementById(id);
   const EMPTY = 0, BLACK = 1, WHITE = 2;
 
@@ -23,6 +27,7 @@
       else if (ch === "O") cells[i] = WHITE;
       else if (ch === ".") region.push(i);
     }
+    if (p.region) { region.length = 0; region.push(...p.region); }
     return { cells, region, w, h };
   }
 
@@ -105,7 +110,7 @@
     const grid = $("grid");
     grid.innerHTML = "";
     const solved = store.read();
-    PROBLEMS.forEach((p, i) => {
+    CURATED.forEach((p, i) => {
       const { cells, region, w, h } = parseDiagram(p);
       const card = document.createElement("div");
       card.className = "card";
@@ -130,10 +135,42 @@
       const b = buildBoard(mini, w, h, region, null, true);
       b.render(cells, null, null);
       b.svg.classList.add("mini");
-      const go = () => { location.hash = "#p/" + (i + 1); };
+      const go = () => { location.hash = "#p/" + encodeURIComponent(p.id); };
       card.addEventListener("click", go);
       card.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
       grid.appendChild(card);
+    });
+    renderTraining();
+  }
+
+  let curLevel = null;
+  function renderTraining() {
+    const levels = ["입문", "초급", "중급", "상급"].filter((lv) => GEN.some((p) => p.level === lv));
+    $("genCount").textContent = GEN.length ? `${GEN.length}문제` : "";
+    if (!GEN.length) { $("tabs").innerHTML = ""; $("chips").innerHTML = ""; return; }
+    if (!curLevel || !levels.includes(curLevel)) curLevel = levels[0];
+    const tabs = $("tabs");
+    tabs.innerHTML = "";
+    for (const lv of levels) {
+      const b = document.createElement("button");
+      b.className = "tab" + (lv === curLevel ? " on" : "");
+      const cnt = GEN.filter((p) => p.level === lv).length;
+      b.textContent = `${lv} ${cnt}`;
+      b.addEventListener("click", () => { curLevel = lv; renderTraining(); });
+      tabs.appendChild(b);
+    }
+    const chips = $("chips");
+    chips.innerHTML = "";
+    const solved = store.read();
+    let no = 0;
+    GEN.forEach((p) => {
+      if (p.level !== curLevel) { if (["입문","초급","중급","상급"].indexOf(p.level) < ["입문","초급","중급","상급"].indexOf(curLevel)) no += 0; return; }
+      no++;
+      const c = document.createElement("button");
+      c.className = "chip" + (solved[p.id] ? " solved" : "");
+      c.innerHTML = `${no}<span class="t">${p.type === "살리기" ? "살" : "잡"}</span>`;
+      c.addEventListener("click", () => { location.hash = "#p/" + encodeURIComponent(p.id); });
+      chips.appendChild(c);
     });
   }
 
@@ -165,13 +202,17 @@
   }
   function coName(i, w) { return i == null || i < 0 ? "패스" : `${(i % w) + 1}열 ${((i / w) | 0) + 1}행`; }
 
-  function openProblem(n) {
-    const p = PROBLEMS[n - 1];
-    if (!p) { location.hash = ""; return; }
-    ui.p = p; ui.idx = n - 1; ui.failPending = false; ui.state = null;
+  function openProblem(id) {
+    const idx = byId[id];
+    if (idx == null) { location.hash = ""; return; }
+    const p = PROBLEMS[idx];
+    ui.p = p; ui.idx = idx; ui.failPending = false; ui.state = null;
     $("home").classList.add("hidden");
     $("play").classList.remove("hidden");
-    $("crumbText").textContent = `第 ${n} 題 · ${p.level} · ${p.type}`;
+    const isGen = idx >= CURATED.length;
+    $("crumbText").textContent = isGen
+      ? `수련장 · ${p.level} · ${p.type}`
+      : `第 ${idx + 1} 題 · ${p.level} · ${p.type}`;
     $("ptitle").textContent = p.title;
     $("stamp").textContent = p.goal === "LIVE" ? "生" : "死";
     $("stampwrap").classList.remove("on");
@@ -274,8 +315,8 @@
 
   /* ── 라우팅/버튼 ── */
   function route() {
-    const m = location.hash.match(/^#p\/(\d+)$/);
-    if (m) openProblem(+m[1]);
+    const m = location.hash.match(/^#p\/(.+)$/);
+    if (m) openProblem(decodeURIComponent(m[1]));
     else {
       $("play").classList.add("hidden");
       $("home").classList.remove("hidden");
@@ -286,7 +327,7 @@
   $("brand").addEventListener("click", () => { location.hash = ""; });
   $("resetBtn").addEventListener("click", () => { setThinking(true); getWorker().postMessage({ type: "reset" }); });
   $("retryBtn").addEventListener("click", () => { setThinking(true); getWorker().postMessage({ type: "undo" }); });
-  $("nextBtn").addEventListener("click", () => { location.hash = "#p/" + (ui.idx + 2); });
+  $("nextBtn").addEventListener("click", () => { const nx = PROBLEMS[ui.idx + 1]; if (nx) location.hash = "#p/" + encodeURIComponent(nx.id); });
   window.addEventListener("hashchange", route);
 
   /* ── SW ── */

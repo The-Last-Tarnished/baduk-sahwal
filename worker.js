@@ -1,5 +1,5 @@
 /* worker.js — 수읽기 전담 워커. UI 스레드는 멈추지 않는다. */
-importScripts("engine.js", "solver.js", "problems.js", "game.js");
+importScripts("engine.js", "solver.js", "problems.js", "problems_gen.js", "game.js");
 
 let game = null;
 let problem = null;
@@ -8,7 +8,8 @@ self.onmessage = (e) => {
   const msg = e.data;
   try {
     if (msg.type === "load") {
-      problem = BadukProblems.PROBLEMS.find((p) => p.id === msg.id);
+      const ALL = BadukProblems.PROBLEMS.concat((self.BadukGenProblems && BadukGenProblems.GEN_PROBLEMS) || []);
+      problem = ALL.find((p) => p.id === msg.id);
       game = BadukGame.makeGame(problem);
       post("loaded", { state: game.state() });
     } else if (msg.type === "move") {

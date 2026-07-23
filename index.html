@@ -129,6 +129,17 @@ header{display:flex; align-items:baseline; gap:12px; padding:26px 2px 6px}
 
 .foot{margin-top:34px; padding-top:14px; border-top:1px solid var(--hairline);
   color:var(--paper-dim); font-size:12px; line-height:1.7}
+.tabs{display:flex; gap:8px; margin:0 0 14px; flex-wrap:wrap}
+.tab{all:unset; cursor:pointer; font-size:13.5px; font-weight:600; padding:8px 16px;
+  border-radius:99px; border:1px solid var(--hairline); color:var(--paper-dim)}
+.tab.on{background:var(--gold); border-color:transparent; color:#241C0C}
+.chipgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(52px,1fr)); gap:8px}
+.chip{all:unset; cursor:pointer; text-align:center; font-size:14px; font-weight:600;
+  padding:12px 0; border-radius:10px; border:1px solid var(--hairline); background:var(--ink2);
+  color:var(--paper); transition:transform .1s ease}
+.chip:active{transform:scale(.93)}
+.chip.solved{background:var(--seal); border-color:transparent; color:#F8ECE2}
+.chip .t{display:block; font-size:9.5px; font-weight:500; color:inherit; opacity:.7; margin-top:2px}
 .hidden{display:none !important}
 :focus-visible{outline:2px solid var(--gold); outline-offset:2px; border-radius:8px}
 </style>
@@ -148,6 +159,15 @@ header{display:flex; align-items:baseline; gap:12px; padding:26px 2px 6px}
       <div class="rule">第一帖 · 입문 열 문제</div>
     </section>
     <section class="grid" id="grid"></section>
+
+    <section class="fore" style="margin-top:38px">
+      <h1>수련장 <em id="genCount"></em></h1>
+      <p>모양을 기계적으로 전부 늘어놓고 성립하는 것만 걸러 담았습니다. 해설은 계산 결과를 그대로 읽어 줍니다.</p>
+      <div class="rule">第二帖 · 급수별 수련</div>
+    </section>
+    <div class="tabs" id="tabs"></div>
+    <section class="chipgrid" id="chips"></section>
+
     <p class="foot">해설의 승패 판정은 팻감 없음을 가정한 완전 탐색 결과입니다. · 사활첩 死活帖</p>
   </main>
 
@@ -179,6 +199,7 @@ header{display:flex; align-items:baseline; gap:12px; padding:26px 2px 6px}
   </main>
 </div>
 <script src="./problems.js"></script>
+<script src="./problems_gen.js"></script>
 <script src="./app.js"></script>
 </body>
 </html>

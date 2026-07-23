@@ -19,8 +19,10 @@
       else if (ch === "O") board.cells[i] = E.WHITE;
       else if (ch === ".") region.push(i);
     }
+    if (p.region) { region.length = 0; region.push(...p.region); }
     let target = [];
-    if (p.goal === "DEAD") {
+    if (p.target) { target = p.target.slice(); }
+    else if (p.goal === "DEAD") {
       for (let i = 0; i < board.cells.length; i++) if (board.cells[i] === E.WHITE) target.push(i);
     } else if (p.targetPoint) {
       const g = E.groupAt(board, p.targetPoint[1] * w + p.targetPoint[0]);
@@ -99,7 +101,7 @@
           if (!rw0) continue;
           const nb2 = new Set(st.banned); nb2.add(rw0.key);
           // 백이 이 수로 판을 뒤집으면 안 됨(정답 유지 확인) — verdictWin이므로 모든 백수는 지는 수지만 방어적으로 확인
-          let loseCnt = 0, legal = 0;
+          let loseCnt = 0, winCnt = 0, legal = 0;
           for (const m2 of region) {
             if (rw0.board.cells[m2] !== E.EMPTY) continue;
             const r2 = E.tryPlay(rw0.board, m2, E.BLACK, nb2);
@@ -112,9 +114,10 @@
               const t2 = terminalNow(r2.board);
               s2 = t2 ? t2.status : solver.solve(r2.board, E.WHITE, defColor, target, nb3).status;
             }
-            if (s2 !== want) loseCnt++;
+            if (s2 !== want) loseCnt++; else winCnt++;
           }
-          if (legal > 0 && loseCnt > 0 && (!pick || loseCnt > pick.loseCnt)) pick = { move: wm, rw: rw0, loseCnt };
+          // 흑이 '착수로' 이길 길이 있는 저항만 채택(정답이 패스뿐인 국면 방지)
+          if (legal > 0 && loseCnt > 0 && winCnt > 0 && (!pick || loseCnt > pick.loseCnt)) pick = { move: wm, rw: rw0, loseCnt };
         }
         if (!pick) {
           st.done = true; st.result = "success";

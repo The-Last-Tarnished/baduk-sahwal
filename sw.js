@@ -1,8 +1,8 @@
 /* sw.js — 오프라인 캐시 */
-const CACHE = "sahwal-v2";
+const CACHE = "sahwal-v3";
 const SHELL = [
   "./", "./index.html", "./app.js", "./worker.js",
-  "./engine.js", "./solver.js", "./problems.js", "./game.js",
+  "./engine.js", "./solver.js", "./problems.js", "./problems_gen.js", "./game.js",
   "./manifest.webmanifest", "./icon-192.png", "./icon-512.png",
 ];
 self.addEventListener("install", (e) => {
