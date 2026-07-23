@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>사활첩 — 돌을 놓아 배우는 삶과 죽음</title>
+<meta name="description" content="바둑 사활을 두면서 배우는 학습장. 모든 수는 계산으로 검증됩니다.">
+<meta name="theme-color" content="#1B2130">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1B2130; --ink2:#222A3D; --ink3:#2B3450;
+  --paper:#EDE6D6; --paper-dim:#9EA0A8; --hairline:#38415C;
+  --wood:#E2B368; --wood2:#C68F46; --line:#4A3517;
+  --stone-b:#171A21; --stone-w:#F3EFE5;
+  --seal:#B2372B; --seal-soft:rgba(178,55,43,.14);
+  --gold:#D8B36B; --ok:#7FB08A;
+  --serif:"Gowun Batang","Noto Serif KR",serif;
+  --sans:"IBM Plex Sans KR","Pretendard","Apple SD Gothic Neo",sans-serif;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+html,body{margin:0; padding:0}
+body{
+  background:var(--ink); color:var(--paper); font-family:var(--sans);
+  font-size:16px; line-height:1.65;
+  min-height:100dvh;
+  background-image:radial-gradient(1200px 500px at 50% -180px, #232C44 0%, var(--ink) 60%);
+}
+.wrap{max-width:600px; margin:0 auto; padding:0 18px calc(28px + env(safe-area-inset-bottom))}
+
+/* ── 헤더 ─────────────────────────── */
+header{display:flex; align-items:baseline; gap:12px; padding:26px 2px 6px}
+.brand{font-family:var(--serif); font-weight:700; font-size:22px; letter-spacing:.02em; cursor:pointer}
+.brand .hanja{color:var(--gold); font-size:15px; margin-left:6px; letter-spacing:.28em}
+.tagline{color:var(--paper-dim); font-size:12.5px; letter-spacing:.04em}
+
+/* ── 홈: 표제부 + 문제 목록 ─────────── */
+.fore{margin:26px 2px 22px}
+.fore h1{font-family:var(--serif); font-weight:700; font-size:30px; line-height:1.35; margin:0 0 10px}
+.fore h1 em{font-style:normal; color:var(--gold)}
+.fore p{color:var(--paper-dim); font-size:14.5px; margin:0; max-width:44ch}
+.fore .rule{display:flex; align-items:center; gap:10px; margin-top:18px; color:var(--paper-dim); font-size:12px; letter-spacing:.14em}
+.fore .rule::before,.fore .rule::after{content:""; height:1px; background:var(--hairline); flex:1}
+
+.grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+@media (max-width:390px){.grid{grid-template-columns:1fr}}
+.card{
+  background:var(--ink2); border:1px solid var(--hairline); border-radius:14px;
+  padding:12px 12px 12px; cursor:pointer; position:relative; overflow:hidden;
+  transition:transform .12s ease, border-color .12s ease;
+}
+.card:active{transform:scale(.97)}
+.card:hover{border-color:#4A5578}
+.card .mini{display:block; width:100%; border-radius:8px; background:linear-gradient(160deg,var(--wood),var(--wood2))}
+.card .no{color:var(--paper-dim); font-size:11px; letter-spacing:.16em; margin:10px 0 2px}
+.card h3{font-family:var(--serif); font-size:16.5px; font-weight:700; margin:0 0 8px; line-height:1.4}
+.badges{display:flex; gap:6px}
+.badge{font-size:11px; padding:2px 8px; border-radius:99px; border:1px solid var(--hairline); color:var(--paper-dim)}
+.badge.type-살리기{color:var(--ok); border-color:rgba(127,176,138,.4)}
+.badge.type-잡기{color:#D98A7E; border-color:rgba(178,55,43,.45)}
+.card .seal-mini{
+  position:absolute; top:9px; right:9px; width:30px; height:30px; border-radius:6px;
+  background:var(--seal); color:#F6E8DC; font-family:var(--serif); font-weight:700;
+  display:flex; align-items:center; justify-content:center; font-size:17px;
+  transform:rotate(-6deg); box-shadow:0 1px 0 rgba(0,0,0,.35);
+}
+
+/* ── 문제 화면 ────────────────────── */
+.crumb{display:flex; align-items:center; gap:8px; margin:18px 0 4px; color:var(--paper-dim); font-size:12.5px; letter-spacing:.14em}
+.crumb button{all:unset; cursor:pointer; color:var(--paper-dim); padding:4px 2px}
+.crumb button:hover{color:var(--paper)}
+.ptitle{font-family:var(--serif); font-weight:700; font-size:26px; margin:2px 0 14px; line-height:1.35}
+
+.boardbox{position:relative; border-radius:16px; overflow:hidden;
+  box-shadow:0 12px 30px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.15)}
+.boardbox svg{display:block; width:100%; height:auto}
+.boardbox.busy{pointer-events:none}
+.turnline{display:flex; align-items:center; gap:8px; margin:12px 2px 0; min-height:24px;
+  color:var(--paper-dim); font-size:13.5px}
+.turnline .dot{width:12px; height:12px; border-radius:50%; background:var(--stone-b);
+  box-shadow:inset -1px -2px 3px rgba(0,0,0,.6), inset 1px 1.5px 2px rgba(255,255,255,.25); flex:none}
+.thinking{display:none; align-items:center; gap:8px}
+.thinking.on{display:flex}
+.thinking i{width:5px;height:5px;border-radius:50%;background:var(--gold);animation:th 1s infinite}
+.thinking i:nth-child(2){animation-delay:.16s}.thinking i:nth-child(3){animation-delay:.32s}
+@keyframes th{0%,70%,100%{opacity:.25; transform:translateY(0)}35%{opacity:1; transform:translateY(-3px)}}
+
+/* 해설 카드: 기보 해설지 */
+.note{background:var(--ink2); border:1px solid var(--hairline); border-radius:14px;
+  padding:16px 18px; margin-top:16px}
+.note .kicker{font-size:11.5px; letter-spacing:.2em; color:var(--gold); margin-bottom:6px}
+.note .kicker.bad{color:#D98A7E}
+.note p{margin:0; font-size:15px}
+.note p + p{margin-top:8px}
+.note.flash{animation:noteIn .35s ease}
+@keyframes noteIn{from{opacity:0; transform:translateY(6px)}to{opacity:1; transform:none}}
+
+.controls{display:flex; gap:10px; margin-top:16px; flex-wrap:wrap}
+.btn{all:unset; cursor:pointer; font-family:var(--sans); font-weight:600; font-size:14.5px;
+  padding:11px 18px; border-radius:12px; border:1px solid var(--hairline); color:var(--paper);
+  transition:transform .1s ease, background .12s ease}
+.btn:active{transform:scale(.96)}
+.btn:hover{background:var(--ink3)}
+.btn.primary{background:var(--seal); border-color:transparent; color:#F8ECE2}
+.btn.primary:hover{background:#C24234}
+.btn[disabled]{opacity:.4; pointer-events:none}
+
+/* 성공 도장 */
+.stampwrap{position:absolute; inset:0; display:none; align-items:center; justify-content:center;
+  background:rgba(20,24,36,.18); pointer-events:none}
+.stampwrap.on{display:flex}
+.stamp{
+  width:min(38%,150px); aspect-ratio:1; border-radius:14px; background:var(--seal);
+  color:#F8ECE2; font-family:var(--serif); font-weight:700;
+  display:flex; align-items:center; justify-content:center;
+  font-size:clamp(48px, 16vw, 84px); line-height:1;
+  transform:rotate(-8deg);
+  box-shadow:0 6px 22px rgba(120,20,10,.5), inset 0 0 0 3px rgba(248,236,226,.55), inset 0 0 0 6px var(--seal);
+  animation:stampIn .45s cubic-bezier(.2,1.6,.4,1)}
+@keyframes stampIn{0%{transform:rotate(-14deg) scale(2.1); opacity:0}60%{opacity:1}100%{transform:rotate(-8deg) scale(1)}}
+@media (prefers-reduced-motion:reduce){
+  .stamp{animation:none}.thinking i{animation:none}.note.flash{animation:none}
+}
+
+.foot{margin-top:34px; padding-top:14px; border-top:1px solid var(--hairline);
+  color:var(--paper-dim); font-size:12px; line-height:1.7}
+.hidden{display:none !important}
+:focus-visible{outline:2px solid var(--gold); outline-offset:2px; border-radius:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand" id="brand">사활첩<span class="hanja">死活帖</span></div>
+    <div class="tagline">돌을 놓아 배우는 삶과 죽음</div>
+  </header>
+
+  <!-- 홈 -->
+  <main id="home">
+    <section class="fore">
+      <h1>바둑돌은 <em>두 집</em>이 있어야 산다.<br>열 문제로 그 이치를 손에 익힌다.</h1>
+      <p>당신은 언제나 흑. 한 수 한 수마다 컴퓨터가 모든 변화를 끝까지 읽어 정오(正誤)와 그 이유를 밝힙니다.</p>
+      <div class="rule">第一帖 · 입문 열 문제</div>
+    </section>
+    <section class="grid" id="grid"></section>
+    <p class="foot">해설의 승패 판정은 팻감 없음을 가정한 완전 탐색 결과입니다. · 사활첩 死活帖</p>
+  </main>
+
+  <!-- 문제 -->
+  <main id="play" class="hidden">
+    <div class="crumb">
+      <button id="backBtn" aria-label="목록으로">← 목록</button>
+      <span id="crumbText"></span>
+    </div>
+    <h2 class="ptitle" id="ptitle"></h2>
+    <div class="boardbox" id="boardbox">
+      <div id="boardhost"></div>
+      <div class="stampwrap" id="stampwrap"><div class="stamp" id="stamp">生</div></div>
+    </div>
+    <div class="turnline">
+      <span class="dot"></span><span id="turnText">흑 차례 — 판 위의 빈 점을 눌러 두세요</span>
+      <span class="thinking" id="thinking"><i></i><i></i><i></i><span>수읽기 중</span></span>
+    </div>
+    <div class="note flash" id="note">
+      <div class="kicker" id="noteKicker">문제</div>
+      <p id="noteText"></p>
+    </div>
+    <div class="controls">
+      <button class="btn hidden" id="retryBtn">되돌리고 다시</button>
+      <button class="btn" id="resetBtn">처음부터</button>
+      <button class="btn primary hidden" id="nextBtn">다음 문제 →</button>
+    </div>
+    <p class="foot">판정 기준: 팻감 없음 가정, 문제 영역 완전 탐색. 살리기는 완생(빅 포함), 잡기는 백 전멸 또는 회생 불능이 확정되면 끝납니다.</p>
+  </main>
+</div>
+<script src="./problems.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>
