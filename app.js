@@ -36,23 +36,14 @@
   function buildBoard(host, w, h, region, onTap, mini) {
     const M = 0.72, cw = w - 1 + M * 2, chh = h - 1 + M * 2;
     const svg = el("svg", { viewBox: `${-M} ${-M} ${cw} ${chh}`, role: "img" });
-    // 나무 바탕
-    const defs = el("defs", {});
-    defs.innerHTML =
-      '<radialGradient id="gb" cx="35%" cy="30%" r="80%">' +
-      '<stop offset="0%" stop-color="#2A2E38"/><stop offset="100%" stop-color="#101319"/></radialGradient>' +
-      '<radialGradient id="gw" cx="35%" cy="28%" r="85%">' +
-      '<stop offset="0%" stop-color="#FFFDF6"/><stop offset="100%" stop-color="#D9D2C2"/></radialGradient>' +
-      '<linearGradient id="wd" x1="0" y1="0" x2="1" y2="1">' +
-      '<stop offset="0%" stop-color="#E7BC70"/><stop offset="100%" stop-color="#C68F46"/></linearGradient>';
-    svg.appendChild(defs);
-    svg.appendChild(el("rect", { x: -M, y: -M, width: cw, height: chh, fill: "url(#wd)" }));
+    // 나무 바탕(연한 단색 — 그라디언트 참조 미사용: 숨김 화면 정의 참조 시 렌더 실패 방지)
+    svg.appendChild(el("rect", { x: -M, y: -M, width: cw, height: chh, fill: "#EDC27A" }));
     // 결 무늬(은은한 가로줄)
     for (let i = 0; i < 5; i++) {
-      svg.appendChild(el("rect", { x: -M, y: -M + (chh / 5) * i + 0.13 * (i % 2 ? 1 : 1.7), width: cw, height: 0.045, fill: "rgba(120,80,25,.10)" }));
+      svg.appendChild(el("rect", { x: -M, y: -M + (chh / 5) * i + 0.13 * (i % 2 ? 1 : 1.7), width: cw, height: 0.045, fill: "rgba(140,95,30,.12)" }));
     }
     // 선
-    const g = el("g", { stroke: "#4A3517", "stroke-width": mini ? 0.045 : 0.032, "stroke-linecap": "round" });
+    const g = el("g", { stroke: "#5A4020", "stroke-width": mini ? 0.045 : 0.032, "stroke-linecap": "round" });
     for (let x = 0; x < w; x++) g.appendChild(el("line", { x1: x, y1: 0, x2: x, y2: h - 1 }));
     for (let y = 0; y < h; y++) g.appendChild(el("line", { x1: 0, y1: y, x2: w - 1, y2: y }));
     svg.appendChild(g);
@@ -89,7 +80,13 @@
             continue;
           }
           const isB = cells[i] === BLACK;
-          stonesG.appendChild(el("circle", { cx: x, cy: y, r: 0.465, fill: isB ? "url(#gb)" : "url(#gw)", stroke: isB ? "rgba(0,0,0,.5)" : "rgba(90,80,60,.55)", "stroke-width": 0.02 }));
+          const cx = x, cy = y;
+          stonesG.appendChild(el("circle", { cx, cy, r: 0.465,
+            fill: isB ? "#1B1E26" : "#F6F2E8",
+            stroke: isB ? "#000000" : "#A99D85", "stroke-width": 0.025 }));
+          // 광택 하이라이트(단색 채움 유지, 참조 없음)
+          stonesG.appendChild(el("ellipse", { cx: cx - 0.14, cy: cy - 0.17, rx: 0.16, ry: 0.11,
+            fill: isB ? "rgba(255,255,255,.28)" : "rgba(255,255,255,.85)" }));
         }
         if (lastMove != null && lastMove >= 0 && cells[lastMove] !== EMPTY) {
           const x = lastMove % w, y = (lastMove / w) | 0;

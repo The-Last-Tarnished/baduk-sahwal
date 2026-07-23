@@ -1,5 +1,5 @@
 /* sw.js — 오프라인 캐시 */
-const CACHE = "sahwal-v1";
+const CACHE = "sahwal-v2";
 const SHELL = [
   "./", "./index.html", "./app.js", "./worker.js",
   "./engine.js", "./solver.js", "./problems.js", "./game.js",
